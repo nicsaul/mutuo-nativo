@@ -4,7 +4,7 @@ dist/
 .env
 .env.local
 *.tsbuildinfo
-convex/_generated/
+# convex/_generated/ — committed so Vercel can build without CONVEX_DEPLOY_KEY
 .pnpm-store/
 
 # Tool/IDE configs
