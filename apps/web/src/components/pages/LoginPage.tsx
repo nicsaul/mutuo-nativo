@@ -1,9 +1,79 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface PasswordRule {
+  label: string;
+  test: (pw: string) => boolean;
+}
+
+const PASSWORD_RULES: PasswordRule[] = [
+  { label: "Al menos 8 caracteres", test: (pw) => pw.length >= 8 },
+  { label: "Una letra mayuscula", test: (pw) => /[A-Z]/.test(pw) },
+  { label: "Una letra minuscula", test: (pw) => /[a-z]/.test(pw) },
+  { label: "Un numero", test: (pw) => /\d/.test(pw) },
+];
+
+function PasswordStrength({ password }: { password: string }) {
+  const results = PASSWORD_RULES.map((rule) => ({
+    ...rule,
+    passed: rule.test(password),
+  }));
+  const passedCount = results.filter((r) => r.passed).length;
+  const strength = passedCount / PASSWORD_RULES.length;
+
+  if (!password) return null;
+
+  return (
+    <div className="space-y-2.5 pt-1">
+      {/* Strength bar */}
+      <div className="flex gap-1">
+        {PASSWORD_RULES.map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-1 flex-1 rounded-full transition-all duration-300",
+              i < passedCount
+                ? strength === 1
+                  ? "bg-white"
+                  : strength >= 0.5
+                    ? "bg-white/60"
+                    : "bg-white/30"
+                : "bg-white/10",
+            )}
+          />
+        ))}
+      </div>
+      {/* Rules */}
+      <div className="space-y-1">
+        {results.map((rule) => (
+          <div
+            key={rule.label}
+            className={cn(
+              "flex items-center gap-1.5 text-[0.65rem] transition-colors duration-200",
+              rule.passed ? "text-white/60" : "text-white/25",
+            )}
+          >
+            {rule.passed ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <X className="h-3 w-3" />
+            )}
+            {rule.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function isPasswordValid(password: string): boolean {
+  return PASSWORD_RULES.every((rule) => rule.test(password));
+}
 
 export function LoginPage() {
   const { signIn } = useAuthActions();
@@ -122,6 +192,10 @@ export function LoginPage() {
         setError("Ingresa tu nombre");
         return;
       }
+      if (flow === "signUp" && !isPasswordValid(password)) {
+        setError("La contraseña no cumple los requisitos");
+        return;
+      }
       setLoading(true);
       try {
         await signIn("password", {
@@ -131,11 +205,16 @@ export function LoginPage() {
           ...(flow === "signUp" ? { name } : {}),
         });
       } catch (err) {
-        setError(
-          flow === "signIn"
-            ? "Email o contraseña incorrectos"
-            : "No se pudo crear la cuenta. Intenta con otro email.",
-        );
+        const message = err instanceof Error ? err.message : "";
+        if (flow === "signIn") {
+          setError("Email o contraseña incorrectos");
+        } else if (message.includes("already exists")) {
+          setError("Ya existe una cuenta con este email. Intenta iniciar sesion.");
+        } else if (message.includes("password") || message.includes("Password")) {
+          setError("La contraseña no cumple los requisitos minimos");
+        } else {
+          setError("No se pudo crear la cuenta. Intenta de nuevo.");
+        }
         setLoading(false);
       }
     },
@@ -202,6 +281,7 @@ export function LoginPage() {
               }
               className="border-white/15 bg-white/8 text-white placeholder:text-white/30 focus-visible:border-white/40 focus-visible:ring-0"
             />
+            {flow === "signUp" && <PasswordStrength password={password} />}
           </div>
 
           <Button
