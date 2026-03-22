@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "rootDir": "../..",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "convex/*": ["../../convex/*"],
+      "convex/_generated/*": ["../../convex/_generated/*"]
+    }
+  },
+  "include": ["src", "../../convex"]
+}

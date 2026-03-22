@@ -1,0 +1,27 @@
+{
+  "name": "mutuo-nativo",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n convex,turbo -c blue,green \"npx convex dev\" \"turbo dev\"",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "check-types": "turbo check-types",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prettier": "^3.5.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  },
+  "dependencies": {
+    "@auth/core": "0.37.0",
+    "@convex-dev/auth": "^0.0.91",
+    "@repo/types": "workspace:*",
+    "convex": "^1.32.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
